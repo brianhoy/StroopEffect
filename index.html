@@ -1,0 +1,140 @@
+<html>
+<head>
+    <title>Stroop Effect</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+<style>
+
+</style>
+
+</head>
+<body>
+    <div class="container grid-hero grid-lg text-center">
+        <div>
+            <header class="navbar">
+                <section class="navbar-section text-primary" style="flex-grow: 1;">
+                        <h1>Stroop Effect</h1>
+                </section>
+            </header>        
+        </div>
+        <div class="text-left col-mx-auto column col-6 col-xs-12">
+            <div id="info">
+                <h2 class="text-center">Warning</h2>
+                <p>By continuing you consent to have your age, gender, and time it takes for you to complete the test collected.</p>
+                <button onclick="AcceptWarning()">Continue</button>         
+            </div>
+            <div id="form" style="display: none;">
+                <b class="text-center">Please enter your age and gender</b>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label" for="ageInp">Age</label>
+                        <input class="form-input" id="ageInp" type="number">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="genderInp">Gender</label>
+                        <select id="genderInp" class="form-select">
+                            <option>Choose an option</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </div>
+                </form>
+                <button type="button" onclick="DoneForm()">Continue</button>         
+            </div>
+            <div id="instructions" style="display: none;">
+                <p>In the next page you will see a list of words. Some of these words will be written in a different color than their name denotes.</p>
+                <b>Instructions</b>
+                <ol>
+                    <li>Please read each WORD (not color) correctly and out loud.</li>
+                    <li>If you do not read a word correctly, keep reading it until you say it correctly.</li>
+                    <li>Click Finish when you are done.</li>
+                </ol>
+                <b>Example</b> <br>
+                <span style='font-size: large; color: blue;'>Red</span>
+                <p>If you saw this, read "red" verbally. Don't read the color of the word.</p>
+                
+                <button onclick="BeginTest()">Begin Test</button>         
+            </div>
+        </div>
+        <div id="test" style="display: none;">
+            <div id="randomWords" align="center">
+
+            </div>
+
+            <button onclick="EndTest()">
+                I'm finished reading
+            </button>
+        </div>
+        <div class="text-left col-mx-auto column col-6 col-xs-12">
+            <div id="results" style="display: none;">
+                <p>Thank you for taking the test. This test was aimed at seeing whether age had an impact on how long it takes to read words aloud when their color didn't match their name. The time it took for you to complete this test is <span id="testTime"></span> seconds.</p>
+            </div>
+              
+        </div>
+    </div>
+    <script>
+        console.log("Script executed");
+        var time = 0;
+        var timerHandle = 0;
+        function IncrementTime() {
+            time += 0.01;
+        }
+        
+        function AcceptWarning() {
+            document.getElementById("info").style.display = "none";
+            document.getElementById("form").style.display = "block";
+        }
+        function DoneForm() {
+            document.getElementById("form").style.display = "none";
+            document.getElementById("instructions").style.display = "block";
+        }
+
+        function BeginTest() {
+            console.log("Beginning test");
+            document.getElementById("instructions").style.display = "none";
+            document.getElementById("test").style.display = "block";
+            timerHandle = setInterval(IncrementTime, 10);
+            GenerateRandomWords(10, 10);
+        }
+        function GenerateRandomWords(rows, columns) {
+            var wordHTML = "<table style='font-size: large;'>";
+
+            var words = ["Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"];
+
+            for(var i = 0; i < rows; i++) {
+                wordHTML += "<tr>";
+                for(var j = 0; j < columns; j++) {
+                    var randomIndex1 = Math.floor(Math.random() * words.length);
+                    var randomIndex2 = Math.floor(Math.random() * words.length);
+
+                    wordHTML += "<th><span style='color: " + words[randomIndex1] + "'>" + words[randomIndex2] + "</span></th>"; 
+
+                }
+                wordHTML += "</tr>";
+            }
+
+            wordHTML += "</table>";
+
+            document.getElementById("randomWords").innerHTML = wordHTML;
+        }
+        function EndTest() {
+            clearTimeout(timerHandle);
+            console.log("Finished test in " + time + " s");
+            document.getElementById("test").style.display = "none";
+            document.getElementById("results").style.display = "block";
+            document.getElementById("testTime").innerHTML = "" + Math.round(time * 100) / 100;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://142.44.162.108:4000/submitData", true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify(
+             {
+                "date": (new Date()).getTime(),
+                "age": document.getElementById("ageInp").value,
+                "gender": document.getElementById("genderInp").value,
+                "time": time
+            }));
+        }
+    </script>
+</body>
+</html>
